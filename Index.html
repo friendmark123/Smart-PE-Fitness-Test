@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ระบบบริหารจัดการข้อมูลสมรรถภาพทางกาย - บดินทรเดชา ๒</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Chart.js v4 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- html2pdf.js สำหรับดาวน์โหลด PDF สรุปกราฟสถิติ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap');
+   
+    :root {
+        --bodin-navy: #002B49;
+        --bodin-blue: #0066B2;
+        --bodin-sky: #00A3E0;
+        --bodin-gold: #D4AF37;
+        --bodin-light: #F4F7FA;
+        --bodin-white: #FFFFFF;
+    }
+
+    body {
+        font-family: 'Sarabun', sans-serif;
+        background-color: var(--bodin-light);
+        padding: 10px;
+        font-size: 16px;
+        color: #333;
+    }
+   
+    .header {
+        width: 100%;
+        background: linear-gradient(135deg, var(--bodin-navy) 0%, var(--bodin-blue) 100%);
+        color: var(--bodin-gold);
+        padding: 25px 15px;
+        border-bottom: 5px solid var(--bodin-gold);
+        box-shadow: 0 4px 15px rgba(0,43,73,0.25);
+        margin: 0;
+        border-radius: 0 0 15px 15px;
+    }
+    .header h2 { font-weight: 700; text-shadow: 1px 1px 2px rgba(0,0,0,0.4); }
+    .header h4 { font-weight: 400; color: #FFFFFF; }
+   
+    .custom-footer {
+        width: 100%;
+        background: linear-gradient(135deg, var(--bodin-navy) 0%, var(--bodin-blue) 100%);
+        color: var(--bodin-gold);
+        text-align: center;
+        padding: 25px 15px;
+        font-size: 1rem;    
+        border-top: 5px solid var(--bodin-gold);
+        box-shadow: 0 -4px 15px rgba(0,43,73,0.2);
+        margin-top: 40px;
+        border-radius: 15px 15px 0 0;
+    }
+
+    .custom-footer i { color: #ffffff; margin-right: 6px; }
+    .custom-footer b { color: #ffffff; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+    .custom-footer span.separator { color: rgba(255,255,255,0.4); margin: 0 8px; }
+
+    @media (max-width: 576px) {
+      body { padding: 5px; }
+      .container { padding-left: 5px; padding-right: 5px; }
+      h1, h2, h3 { font-size: 1.3rem !important; }
+      .btn { width: 100%; margin-bottom: 8px; padding: 10px; }
+      .header { padding: 18px 10px !important; font-size: 1.1rem !important; }
+      .custom-footer { padding: 18px 10px !important; font-size: 0.85rem; margin-top: 25px; }
+      .modal-dialog { margin: 0.5rem; }
+    }
+
+    .hidden { display: none !important; }
+    .card-menu { 
+        cursor: pointer; 
+        transition: all 0.3s ease; 
+        border-radius: 16px; 
+        border: none;
+        background: #ffffff;
+        box-shadow: 0 8px 20px rgba(0,43,73,0.08);
+    }
+    .card-menu:hover { 
+        transform: translateY(-5px); 
+        box-shadow: 0 12px 25px rgba(0,43,73,0.18); 
+    }
+    .card-menu i { color: var(--bodin-blue); }
+    .card-menu h4 { color: var(--bodin-navy); font-weight: 600; }
+
+    .btn-bodin-primary {
+        background-color: var(--bodin-blue);
+        color: white;
+        border: none;
+    }
+    .btn-bodin-primary:hover {
+        background-color: var(--bodin-navy);
+        color: white;
+    }
+
+    .table-responsive { 
+        background: white; 
+        border-radius: 12px; 
+        padding: 10px; 
+        width: 100%; 
+        margin-bottom: 15px; 
+        overflow-y: hidden; 
+        overflow-x: auto; 
+        -webkit-overflow-scrolling: touch; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .table-responsive th { white-space: nowrap; }
+    input, select, textarea { font-size: 16px !important; padding: 10px !important; border-radius: 8px !important; }
+   
+    .bmi-very-thin { background-color: #ff6600 !important; color: white !important; font-weight: bold; }
+    .bmi-thin { background-color: #ffcc00 !important; color: black !important; font-weight: bold; }      
+    .bmi-normal { background-color: #28a745 !important; color: white !important; font-weight: bold; }    
+    .bmi-overweight { background-color: #ffcc00 !important; color: black !important; font-weight: bold; }
+    .bmi-obese { background-color: #cc0000 !important; color: white !important; font-weight: bold; }
+    
+    .text-status-red { color: #dc3545 !important; font-weight: bold; }      
+    .text-status-orange { color: #fd7e14 !important; font-weight: bold; }    
+    .text-status-yellow { color: #ffc107 !important; font-weight: bold; text-shadow: 1px 1px 1px rgba(0,0,0,0.1); }
+    .text-status-lightgreen { color: #198754 !important; font-weight: bold; }
+    .text-status-green { color: #0d6efd !important; font-weight: bold; }    
+
+    .chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 450px;
+        margin: 0 auto;
+    }
+    
+    .nav-tabs .nav-link.active {
+        font-weight: bold;
+        color: var(--bodin-navy);
+        border-bottom: 3px solid var(--bodin-blue);
+    }
+    </style>
+</head>
+<body>
+
+<div class="header text-center mb-4">
+    <h2>โรงเรียนบดินทรเดชา (สิงห์ สิงหเสนี) ๒</h2>
+    <h4>ระบบบริหารจัดการข้อมูลสมรรถภาพทางกาย</h4>
+</div>
+
+<div class="container">
+    <!-- หน้าแรก Menu -->
+    <div id="home">
+        <div class="row g-4 text-center mt-2">
+            <div class="col-md-4" onclick="show('record')">
+                <div class="card card-menu p-5">
+                    <i class="bi bi-pencil-square display-3 mb-3"></i>
+                    <h4>บันทึกผลทดสอบ</h4>
+                </div>
+            </div>
+            <div class="col-md-4" onclick="show('search')">
+                <div class="card card-menu p-5">
+                    <i class="bi bi-search display-3 mb-3"></i>
+                    <h4>ค้นหาประวัติ</h4>
+                </div>
+            </div>
+            <div class="col-md-4" onclick="adminLogin()">
+                <div class="card card-menu p-5">
+                    <i class="bi bi-lock-fill display-3 mb-3" style="color: #cc0000;"></i>
+                    <h4>ส่วนงาน Admin / รายงาน</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- หน้าบันทึกข้อมูล -->
+    <div id="record" class="hidden">
+        <button class="btn btn-secondary mb-3" onclick="show('home')"><i class="bi bi-house"></i> กลับหน้าแรก</button>
+        <div class="card shadow-sm p-4 border-0 rounded-4">
+           
+            <!-- ส่วนที่ 1: ค้นหาข้อมูล -->
+            <h5 class="text-primary border-bottom pb-2 mb-3"><i class="bi bi-search"></i> 1. ค้นหาข้อมูลเพื่อบันทึก/แก้ไข</h5>
+            <div class="row g-3 mb-4 bg-light p-3 rounded-3">
+                <div class="col-md-3">
+                    <label class="form-label">ภาคเรียน</label>
+                    <select id="sem" class="form-select"><option value="1">1</option><option value="2">2</option></select>
+                </div>
+                <div class="col-md-3"><label class="form-label">ปีการศึกษา</label><select id="yr" class="form-select"></select></div>
+                <div class="col-md-4"><label class="form-label">รหัสนักเรียน</label><input type="text" id="sid" class="form-control" placeholder="กรอกรหัสประจำตัว แล้วกด Enter"></div>
+                <div class="col-md-2 d-flex align-items-end"><button class="btn btn-dark w-100" onclick="sync()"><i class="bi bi-arrow-repeat"></i> ค้นหา/Sync</button></div>
+            </div>
+
+            <div id="status-alert" class="alert alert-warning py-2 mb-3 hidden" role="alert"></div>
+
+            <div id="form-data-area" class="hidden">
+                <!-- ส่วนที่ 2: ข้อมูลนักเรียน -->
+                <h5 class="text-secondary border-bottom pb-2 mb-3"><i class="bi bi-person-badge"></i> 2. ข้อมูลนักเรียน (ดึงจากฐานข้อมูลทะเบียน)</h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-2">
+                        <label>คำนำหน้า</label>
+                        <select id="pfx" class="form-select" onchange="autoMatchGender()">
+                            <option value="เด็กชาย">เด็กชาย</option><option value="เด็กหญิง">เด็กหญิง</option>
+                            <option value="นาย">นาย</option><option value="นางสาว">นางสาว</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3"><label>ชื่อ</label><input type="text" id="fn" class="form-control" placeholder="กรอกชื่อจริง"></div>
+                    <div class="col-md-3"><label>นามสกุล</label><input type="text" id="ln" class="form-control" placeholder="กรอกนามสกุล"></div>
+                    <div class="col-md-2"><label>เพศ</label><select id="gen" class="form-select"><option value="ชาย">ชาย</option><option value="หญิง">หญิง</option></select></div>
+                    <div class="col-md-2"><label>อายุ (ปี)</label><input type="number" id="age" class="form-control" min="1" placeholder="ระบุอายุ"></div>
+                    <div class="col-md-4">
+                        <label>ระดับชั้น</label>
+                        <select id="lev" class="form-select">
+                            <option value="ม.1">ม.1</option><option value="ม.2">ม.2</option><option value="ม.3">ม.3</option>
+                            <option value="ม.4">ม.4</option><option value="ม.5">ม.5</option><option value="ม.6">ม.6</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label>ห้อง</label>
+                        <select id="rom" class="form-select">
+                            <option value="">เลือกห้อง</option>
+                            <script>
+                                for(let i=1; i<=16; i++) {
+                                    document.write('<option value="' + i + '">ห้อง ' + i + '</option>');
+                                }
+                            </script>
+                        </select>
+                    </div>
+                    <div class="col-md-4"><label>เลขที่</label><input type="number" id="no" class="form-control" min="1" placeholder="ระบุเลขที่"></div>
+                </div>
+
+                <!-- ส่วนที่ 3: ผลการทดสอบสมรรถภาพ -->
+                <h5 class="text-danger border-bottom pb-2 mb-3"><i class="bi bi-activity"></i> 3. ผลการทดสอบสมรรถภาพ</h5>
+                <div class="row g-3">
+                    <div class="col-md-2"><label>น้ำหนัก (กก.)</label><input type="number" step="0.1" id="w" class="form-control" oninput="calcBMILive()"></div>
+                    <div class="col-md-2"><label>ส่วนสูง (ซม.)</label><input type="number" step="0.1" id="h" class="form-control" oninput="calcBMILive()"></div>
+                    <div class="col-md-2"><label class="text-primary fw-bold">BMI Live</label><input type="text" id="bmi_live" class="form-control bg-light" readonly placeholder="รอคำนวณ..."></div>
+                    <div class="col-md-2"><label>นั่งงอตัว (ซม.)</label><input type="number" step="0.1" id="f1" class="form-control" placeholder="รองรับค่า 0 หรือติดลบ"></div>
+                    <div class="col-md-2"><label>ยืนยกเข่า 3 นาที (ครั้ง)</label><input type="number" id="f2" class="form-control"></div>
+                    <div class="col-md-2"><label>ดันพื้น 30 วินาที (ครั้ง)</label><input type="number" id="f3" class="form-control"></div>
+                    <div class="col-md-2"><label>ลุกนั่ง 60 วินาที (ครั้ง)</label><input type="number" id="f4" class="form-control"></div>
+                    <div class="col-12 mt-4">
+                        <button class="btn btn-bodin-primary w-100 p-3 shadow-sm fs-5 rounded-3" onclick="save()"><i class="bi bi-save"></i> บันทึกข้อมูลและประมวลเกณฑ์ระบบ</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- หน้าค้นหาประวัติ -->
+    <div id="search" class="hidden">
+        <button class="btn btn-secondary mb-3" onclick="show('home')">กลับหน้าแรก</button>
+        <div class="card p-4 shadow-sm border-0 mb-3 rounded-4">
+            <div class="row g-2">
+                <div class="col-md-3"><label>ภาคเรียน</label><select id="sSem" class="form-select"><option value="all">ทั้งหมด</option><option value="1">1</option><option value="2">2</option></select></div>
+                <div class="col-md-3"><label>ปีการศึกษา</label><select id="sYr" class="form-select"><option value="all">ทั้งหมด</option></select></div>
+                <div class="col-md-4"><label>รหัสนักเรียน</label><input type="text" id="sId" class="form-control" placeholder="ระบุรหัสประจำตัวนักเรียน แล้วกด Enter"></div>
+                <div class="col-md-2 d-flex align-items-end"><button class="btn btn-success w-100" onclick="searchHistory()">ค้นหา</button></div>
+            </div>
+        </div>
+        <div id="sRes" class="card shadow p-4 hidden border-0 mt-3 rounded-4">
+            <div class="alert alert-info py-2" id="sInfo"></div>
+            <div id="sTableArea"></div>
+        </div>
+    </div>
+
+    <!-- หน้า Admin -->
+    <div id="admin" class="hidden">
+        <button class="btn btn-secondary mb-3" onclick="show('home')">กลับหน้าแรก</button>
+       
+        <div class="card p-3 shadow-sm border-0 bg-white mb-4 rounded-4">
+            <h5 class="text-danger mb-3"><i class="bi bi-funnel"></i> ตัวกรองข้อมูลรายห้องและระดับชั้น</h5>
+            <div class="row g-2 mb-3">
+                <div class="col-md-2">
+                    <label>ภาคเรียน</label>
+                    <select id="aSem" class="form-select">
+                        <option value="all">ทั้งหมด</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label>ปีการศึกษา</label>
+                    <select id="aYr" class="form-select">
+                        <option value="all">ทั้งหมด</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label>ระดับชั้น</label>
+                    <select id="aLev" class="form-select">
+                        <option value="all">ทั้งหมด</option>
+                        <option value="ม.1">ม.1</option>
+                        <option value="ม.2">ม.2</option>
+                        <option value="ม.3">ม.3</option>
+                        <option value="ม.4">ม.4</option>
+                        <option value="ม.5">ม.5</option>
+                        <option value="ม.6">ม.6</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label>ห้อง</label>
+                    <select id="aRom" class="form-select">
+                        <option value="all">ทั้งหมด</option>
+                        <script>
+                            for(let i=1; i<=16; i++) {
+                                document.write('<option value="' + i + '">' + i + '</option>');
+                            }
+                        </script>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-danger w-100" onclick="loadAdminDataByTab()"><i class="bi bi-search"></i> แสดงข้อมูล</button>
+                </div>
+            </div>
+           
+            <hr class="my-3">
+
+            <div class="row g-2 mb-3">
+                <div class="col-12">
+                    <button id="btnShowStats" class="btn text-white w-100 py-2 shadow-sm rounded-3 hidden" style="background-color: #6f42c1;" onclick="openAdminStatsModal()">
+                        <i class="bi bi-bar-chart-line-fill me-1"></i> สรุปกราฟสถิติภาพรวม
+                    </button>
+                </div>
+            </div>
+
+            <div class="row g-2 mb-2" id="bulkActions" style="display:none;">
+                <div class="col-md-12 d-flex gap-2 justify-content-end flex-wrap">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="toggleSelectAll(true)">เลือกทั้งหมด</button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="toggleSelectAll(false)">ไม่เลือกทั้งหมด</button>
+                    <button class="btn btn-primary btn-sm" onclick="printSelectedReport()"><i class="bi bi-file-pdf"></i> ออก PDF ที่เลือก</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteSelected()"><i class="bi bi-trash"></i> ลบที่เลือก</button>
+                </div>
+            </div>
+           
+            <div class="row g-2">
+                <div class="col-md-6" id="btnClassPDF" style="display:none;">
+                    <button id="btnClassText" class="btn btn-outline-primary w-100" onclick="printReport('CLASS')"><i class="bi bi-file-pdf"></i> สร้าง PDF รายห้อง</button>
+                </div>
+                <div class="col-md-6">
+                    <button id="btnAnnual" style="display: none;" class="btn btn-outline-dark w-100" onclick="printReport('EXECUTIVE')"><i class="bi bi-file-pdf"></i> สร้าง PDF สรุปทั้งหมด</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- เมนูสลับ Tab ระหว่าง "นักเรียนที่ทดสอบแล้ว" กับ "นักเรียนที่ยังไม่ได้ทดสอบ" -->
+        <ul class="nav nav-tabs mb-3" id="adminTabMenu">
+            <li class="nav-item">
+                <button class="nav-link active" id="tabTested" onclick="switchAdminTab('tested')"><i class="bi bi-check-circle-fill text-success"></i> รายชื่อนักเรียนที่ทดสอบแล้ว</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link text-danger" id="tabPending" onclick="switchAdminTab('pending')"><i class="bi bi-exclamation-triangle-fill text-warning"></i> ตรวจสอบนักเรียนที่ยังไม่ได้ทดสอบ</button>
+            </li>
+        </ul>
+
+        <!-- Tab 1: รายชื่อนักเรียนที่ทดสอบแล้ว -->
+        <div id="areaTested">
+            <div class="table-responsive shadow-sm">
+                <table class="table table-hover table-bordered bg-white align-middle m-0" style="font-size: 0.9rem;">
+                    <thead class="table-dark text-center" style="background-color: var(--bodin-navy);">
+                        <tr>
+                            <th>เลือก</th><th>รหัสนักเรียน</th><th>ชั้น/ห้อง</th><th>เลขที่</th><th>ชื่อ-สกุล</th>
+                            <th>BMI</th><th>งอตัว</th><th>ยกเข่า</th><th>ดันพื้น</th><th>ลุกนั่ง</th>
+                            <th>ภาคเรียน</th><th>ปีการศึกษา</th><th>คะแนนรวม</th><th>Rank</th><th style="min-width: 150px;">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="aTable">
+                        <tr><td colspan="15" class="text-center py-4 text-muted"><i class="bi bi-info-circle"></i> กรุณาเลือกตัวกรองด้านบน แล้วกดปุ่ม "แสดงข้อมูล" เพื่อเรียกดูบัญชีรายชื่อ</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="paginationControls" class="mt-3"></div>
+        </div>
+
+        <!-- Tab 2: ตารางนักเรียนที่ยังไม่ได้ทดสอบ -->
+        <div id="areaPending" class="hidden">
+            <div class="alert alert-warning py-2 shadow-sm rounded-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <i class="bi bi-exclamation-circle-fill"></i> <b>รายการนักเรียนค้างทดสอบ:</b> เปรียบเทียบจากทะเบียนนักเรียน (Student_DB) ที่ยังไม่มีผลการทดสอบในเทอม/ปีการศึกษาที่ระบุ
+                </div>
+                <button class="btn btn-success btn-sm" onclick="copyPendingToLine()"><i class="bi bi-line me-1"></i> คัดลอกส่ง LINE</button>
+            </div>
+            <div class="table-responsive shadow-sm">
+                <table class="table table-hover table-bordered bg-white align-middle m-0" style="font-size: 0.9rem;">
+                    <thead class="table-warning text-center">
+                        <tr>
+                            <th>ลำดับ</th><th>รหัสนักเรียน</th><th>ชั้น/ห้อง</th><th>เลขที่</th><th>ชื่อ-นามสกุล</th>
+                            <th>ภาคเรียน</th><th>ปีการศึกษา</th><th>สถานะการทดสอบ</th><th>ดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pTable">
+                        <tr><td colspan="9" class="text-center py-4 text-muted"><i class="bi bi-info-circle"></i> กรุณาเลือกตัวกรองด้านบนเป็นตัวเลข (ภาคเรียน, ปีการศึกษา, ระดับชั้น) แล้วกดปุ่ม "แสดงข้อมูล"</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="pendingPaginationControls" class="mt-3"></div>
+        </div>
+    </div>
+</div>
+<!-- Modal แสดงกราฟสถิติภาพรวม -->
+<div class="modal fade" id="statsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, var(--bodin-navy), var(--bodin-blue));">
+                <h5 class="modal-title"><i class="bi bi-bar-chart-fill me-2"></i>สรุปแผนภูมิสถิติและเกณฑ์การประเมินสมรรถภาพ</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3 p-md-4" id="pdfReportContent">
+                <div class="text-center mb-3">
+                    <h6 id="statsModalSubTitle" class="fw-bold text-muted"></h6>
+                </div>
+                
+                <div style="position: relative; height: 380px; width: 100%;">
+                    <canvas id="adminStackedChart"></canvas>
+                </div>
+                
+                <hr class="my-4">
+                
+                <h6 class="fw-bold text-navy mb-3"><i class="bi bi-table me-1"></i> ตารางจำแนกจำนวนและเปอร์เซ็นต์ตามระดับเกณฑ์ (5 รายการประเมิน)</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered text-center align-middle" style="font-size: 0.85rem;">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="min-width: 160px;">รายการประเมิน</th>
+                                <th style="background-color: #f8d7da;">ต่ำมาก / ผอมมาก</th>
+                                <th style="background-color: #fff3cd;">ต่ำ / ผอม</th>
+                                <th style="background-color: #d1e7dd;">ปานกลาง / สมส่วน</th>
+                                <th style="background-color: #cfe2ff;">ดี / ท้วม</th>
+                                <th style="background-color: #d1c4e9;">ดีมาก / อ้วน</th>
+                                <th>รวม (คน)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-success" onclick="downloadStatsPDF()"><i class="bi bi-file-earmark-pdf-fill me-1"></i> ดาวน์โหลด PDF</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer ส่วนท้ายเว็บไซต์ -->
+<footer class="custom-footer">
+    <i class="bi bi-gear-fill"></i> พัฒนาระบบโดย <b>ครูธวัชชัย ยอดจันทร์</b>
+    <span class="separator">|</span> โรงเรียนบดินทรเดชา (สิงห์ สิงหเสนี) ๒
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    var bmiCriteriaMatrix = [];
+    var radarChartsInstances = {};
+    var stackedChartInstance = null;
+    var currentAdminTab = 'tested';
+
+    document.addEventListener("DOMContentLoaded", function () {
+        fetchYearList();
+
+        const sidInput = document.getElementById('sid');
+        if (sidInput) {
+            sidInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    sync();
+                }
+            });
+        }
+
+        const sIdInput = document.getElementById('sId');
+        if (sIdInput) {
+            sIdInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    searchHistory();
+                }
+            });
+        }
+    });
+
+    function fetchYearList() {
+        google.script.run.withSuccessHandler(function(years) {
+            if (years && years.length > 0) {
+                const yrSelects = ['yr', 'sYr', 'aYr'];
+                yrSelects.forEach(id => {
+                    const select = document.getElementById(id);
+                    if (select) {
+                        select.innerHTML = '';
+                        if (id === 'sYr' || id === 'aYr') {
+                            const optAll = document.createElement('option');
+                            optAll.value = 'all';
+                            optAll.textContent = 'ทั้งหมด';
+                            select.appendChild(optAll);
+                        }
+                        years.forEach(y => {
+                            const opt = document.createElement('option');
+                            opt.value = y;
+                            opt.textContent = y;
+                            select.appendChild(opt);
+                        });
+                    }
+                });
+            }
+        }).getYearList();
+    }
+
+    function show(pageId) {
+        ['home', 'record', 'search', 'admin'].forEach(id => {
+            let el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        });
+        let target = document.getElementById(pageId);
+        if (target) target.classList.remove('hidden');
+    }
+
+    function adminLogin() {
+        Swal.fire({
+            title: 'Admin Login',
+            text: 'กรุณากรอกรหัสผ่านเพื่อเข้าถึงระบบรายงาน',
+            html: `
+                <div class="input-group mt-3">
+                    <input type="password" id="swalAdminPassword" class="form-control" placeholder="กรอกรหัสผ่าน" style="text-align: center;">
+                    <button class="btn btn-outline-secondary" type="button" onclick="toggleSwalPassword()">
+                        <i id="swalPasswordIcon" class="bi bi-eye-slash"></i>
+                    </button>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonColor: '#002B49',
+            cancelButtonText: 'ยกเลิก',
+            confirmButtonText: 'เข้าสู่ระบบ',
+            didOpen: () => {
+                const passInput = document.getElementById('swalAdminPassword');
+                if (passInput) {
+                    passInput.focus();
+                    passInput.addEventListener('keydown', function (e) {
+                        if (e.key === 'Enter' || e.keyCode === 13) {
+                            e.preventDefault();
+                            Swal.clickConfirm();
+                        }
+                    });
+                }
+            },
+            preConfirm: () => {
+                const password = document.getElementById('swalAdminPassword').value;
+                if (!password) { Swal.showValidationMessage('กรุณากรอกรหัสผ่าน'); }
+                return password;
+            }
+        }).then(r => {
+            if (r.value === 'admin123') { show('admin'); } 
+            else if (r.value) { Swal.fire('รหัสผ่านไม่ถูกต้อง', 'กรุณาลองใหม่อีกครั้ง', 'error'); }
+        });
+    }
+
+    function toggleSwalPassword() {
+        const passwordInput = document.getElementById('swalAdminPassword');
+        const passwordIcon = document.getElementById('swalPasswordIcon');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';                
+            passwordIcon.className = 'bi bi-eye';
+        } else {
+            passwordInput.type = 'password';            
+            passwordIcon.className = 'bi bi-eye-slash';
+        }
+    }
+
+    function autoMatchGender() {
+        const pfx = document.getElementById('pfx').value;
+        const genSelect = document.getElementById('gen');
+        if (pfx === 'เด็กชาย' || pfx === 'นาย') { genSelect.value = 'ชาย'; } 
+        else if (pfx === 'เด็กหญิง' || pfx === 'นางสาว') { genSelect.value = 'หญิง'; }
+        calcBMILive();
+    }
+
+    function calcBMILive() {
+        let w = parseFloat(document.getElementById('w').value);
+        let h = parseFloat(document.getElementById('h').value);
+        let bmiInput = document.getElementById('bmi_live');
+        if (!isNaN(w) && !isNaN(h) && h > 0) {
+            let bmi = (w / ((h / 100) * (h / 100))).toFixed(2);
+            bmiInput.value = bmi;
+        } else {
+            bmiInput.value = "";
+        }
+    }
+
+    function toggleStudentFieldsLock(isLock) {
+        const fields = ['pfx', 'fn', 'ln', 'lev', 'rom', 'no'];
+        fields.forEach(id => {
+            let el = document.getElementById(id);
+            if(el) {
+                if(isLock) {
+                    el.setAttribute('readonly', 'true');
+                    if(el.tagName === 'SELECT') el.style.pointerEvents = 'none';
+                } else {
+                    el.removeAttribute('readonly');
+                    if(el.tagName === 'SELECT') el.style.pointerEvents = 'auto';
+                }
+            }
+        });
+    }
+
+    function sync() {
+        var id = document.getElementById('sid').value;
+        var sem = document.getElementById('sem').value;
+        var yr = document.getElementById('yr').value;
+        var alertBox = document.getElementById('status-alert');
+        var dataArea = document.getElementById('form-data-area');
+
+        if(!id) return Swal.fire('แจ้งเตือน', 'กรุณากรอกรหัสประจำตัว', 'warning');
+        Swal.fire({ title: 'กำลังค้นหาข้อมูล...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+        google.script.run.withSuccessHandler(d => {
+            alertBox.classList.remove('hidden');
+            dataArea.classList.remove('hidden');
+
+            if (d.found) {
+                document.getElementById('pfx').value = d.prefix || "เด็กชาย";
+                document.getElementById('fn').value = d.fname || ""; 
+                document.getElementById('ln').value = d.lname || "";
+                document.getElementById('gen').value = d.gender || "ชาย"; 
+                document.getElementById('age').value = d.age || "";
+                document.getElementById('lev').value = d.level || "ม.1"; 
+                document.getElementById('rom').value = d.room || "";
+                document.getElementById('no').value = d.no || "";
+
+                toggleStudentFieldsLock(true);
+
+                if(d.hasOldData) {
+                    document.getElementById('w').value = d.weight || ""; 
+                    document.getElementById('h').value = d.height || "";
+                    document.getElementById('f1').value = (d.f1 !== undefined && d.f1 !== null) ? d.f1 : ""; 
+                    document.getElementById('f2').value = d.f2 || "";
+                    document.getElementById('f3').value = d.f3 || ""; 
+                    document.getElementById('f4').value = d.f4 || "";
+                    
+                    calcBMILive();
+                    alertBox.className = "alert alert-info py-2 mb-3 rounded-3";
+                    alertBox.innerHTML = "<i class='bi bi-info-circle-fill'></i> <b>พบประวัติการทดสอบเดิมในระบบ:</b> ดึงค่าเดิมเพื่อเตรียมแก้ไขข้อมูลเรียบร้อย";
+                    Swal.fire({ icon: 'info', title: 'ดึงข้อมูลประวัติเดิมสำเร็จ', text: 'ข้อมูลหลักถูกล็อกป้องกันการแก้ไขผิดพลาด สามารถแก้ไขเฉพาะเพศและอายุได้', confirmButtonColor: '#002B49' });
+                } else {
+                    clearScoreInputs();
+                    alertBox.className = "alert alert-success py-2 mb-3 rounded-3";
+                    alertBox.innerHTML = "<i class='bi bi-check-circle-fill'></i> <b>พบทะเบียนประวัติหลัก:</b> ดึงรายชื่อสำเร็จ สามารถกรอกผลทดสอบชุดใหม่ได้ทันที";
+                    Swal.fire({ icon: 'success', title: 'ดึงข้อมูลทะเบียนสำเร็จ', text: 'ระบบล็อกข้อมูลนักเรียนเรียบร้อย กรุณากรอกผลการทดสอบ', confirmButtonColor: '#0066B2' });
+                }
+            } else {
+                toggleStudentFieldsLock(false);
+                clearStudentInputs(); 
+                clearScoreInputs();
+                alertBox.className = "alert alert-warning py-2 mb-3 rounded-3";
+                alertBox.innerHTML = "<i class='bi bi-exclamation-triangle-fill'></i> <b>ไม่พบข้อมูลในฐานประวัติ:</b> แต่ระบบปลดล็อกให้กรอกสร้างประวัติใหม่ได้อิสระ";
+                Swal.fire({ icon: 'warning', title: 'ไม่พบข้อมูลในระบบ', text: 'ระบบเปิดให้กรอกข้อมูลใหม่ทั้งหมดได้อย่างอิสระ', confirmButtonColor: '#ffc107' });
+            }
+        }).searchStudentData(id, sem, yr);
+    }
+
+    function clearStudentInputs() {
+        document.getElementById('pfx').value = "เด็กชาย"; document.getElementById('fn').value = "";
+        document.getElementById('ln').value = ""; document.getElementById('gen').value = "ชาย";
+        document.getElementById('age').value = ""; document.getElementById('lev').value = "ม.1";
+        document.getElementById('rom').value = ""; document.getElementById('no').value = "";
+    }
+
+    function clearScoreInputs() {
+        ['w', 'h', 'f1', 'f2', 'f3', 'f4', 'bmi_live'].forEach(id => {
+            let el = document.getElementById(id); if(el) { el.value = ""; if(id === 'bmi_live') el.className = "form-control bg-light"; }
+        });
+    }
+
+    function save() {
+        var f = {
+            student_id: document.getElementById('sid').value, prefix: document.getElementById('pfx').value,
+            first_name: document.getElementById('fn').value, last_name: document.getElementById('ln').value,
+            gender: document.getElementById('gen').value, age: document.getElementById('age').value,
+            class_level: document.getElementById('lev').value, room: document.getElementById('rom').value,
+            no: document.getElementById('no').value, semester: document.getElementById('sem').value,
+            academic_year: document.getElementById('yr').value, Weight: document.getElementById('w').value,
+            High: document.getElementById('h').value, Sit_and_Reach: document.getElementById('f1').value,
+            Step_Up_3: document.getElementById('f2').value, Push_Up_30: document.getElementById('f3').value,
+            Sit_Up_60: document.getElementById('f4').value
+        };
+       
+        if(!f.student_id || !f.first_name || !f.last_name || !f.age || !f.room || !f.no || !f.Weight || !f.High || f.Sit_and_Reach === "" || !f.Step_Up_3 || !f.Push_Up_30 || !f.Sit_Up_60) {
+            return Swal.fire({title: 'ข้อมูลไม่ครบถ้วน', text:'กรุณาระบุข้อมูลประจำตัวและกรอกผลทดสอบสมรรถภาพให้ครบถ้วนทุกช่องก่อนบันทึก', icon:'warning', confirmButtonColor: '#d33'});
+        }
+       
+        Swal.fire({title: 'กำลังคำนวณและประเมินเกณฑ์ลงตาราง...', didOpen: () => Swal.showLoading(), allowOutsideClick: false});
+       
+        google.script.run.withSuccessHandler(res => {
+            if (res.status === "error") {
+                Swal.close();
+                return Swal.fire({ title: 'บันทึกไม่สำเร็จ', text: res.message, icon: 'error', confirmButtonColor: '#d33' });
+            }
+
+            var titleText = res.action === "update" ? "อัปเดตแก้ไขข้อมูลเดิมสำเร็จ!" : "บันทึกและประมวลระดับเกณฑ์สำเร็จ!";
+           
+            var thpColor = (lbl) => {
+                if (["ต่ำมาก"].includes(lbl)) return "text-status-red";
+                if (["ต่ำ", "ผอมมาก", "อ้วน"].includes(lbl)) return "text-status-orange";
+                if (["ปานกลาง", "ผอม", "ท้วม"].includes(lbl)) return "text-status-yellow";
+                if (["ดี"].includes(lbl)) return "text-status-lightgreen";
+                if (["ดีมาก", "สมส่วน"].includes(lbl)) return "text-status-green";
+                return "";
+            };
+
+            var html = `
+                <div class="text-start mb-3 bg-light p-3 rounded-3 border-start border-primary border-4" style="font-size:0.95rem;">
+                    <b>นักเรียน:</b> ${res.info} &nbsp;&nbsp;|&nbsp;&nbsp;
+                    <b>อายุ:</b> ${f.age} ปี
+                </div>
+                <div class="table-responsive">
+                <table class="table table-bordered table-striped table-sm text-center align-middle" style="font-size:0.9rem; min-width: 400px;">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>รายการวัด/ทดสอบ</th>
+                            <th>สถิติที่ทำได้</th>
+                            <th>ระดับเกณฑ์</th>
+                            <th>คะแนนที่ได้รับ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="text-start">ดัชนีมวลกาย (BMI)</td><td><b>${res.bmi}</b></td><td class="${thpColor(res.bmiLabel)}">${res.bmiLabel}</td><td><span class="badge bg-secondary">${res.bmiScore} แต้ม</span></td></tr>
+                        <tr><td class="text-start">นั่งงอตัว (ซม.)</td><td>${res.f1} ซม.</td><td class="${thpColor(res.f1Label)}">${res.f1Label}</td><td><span class="badge bg-secondary">${res.f1Score} แต้ม</span></td></tr>
+                        <tr><td class="text-start">ยืนยกเข่า 3 นาที (ครั้ง)</td><td>${res.f2} ครั้ง</td><td class="${thpColor(res.f2Label)}">${res.f2Label}</td><td><span class="badge bg-secondary">${res.f2Score} แต้ม</span></td></tr>
+                        <tr><td class="text-start">ดันพื้น 30 วินาที (ครั้ง)</td><td>${res.f3} ครั้ง</td><td class="${thpColor(res.f3Label)}">${res.f3Label}</td><td><span class="badge bg-secondary">${res.f3Score} แต้ม</span></td></tr>
+                        <tr><td class="text-start">ลุกนั่ง 60 วินาที (ครั้ง)</td><td>${res.f4} ครั้ง</td><td class="${thpColor(res.f4Label)}">${res.f4Label}</td><td><span class="badge bg-secondary">${res.f4Score} แต้ม</span></td></tr>
+                        <tr class="table-warning font-weight-bold"><td colspan="3" class="text-end"><b>คะแนนรวมแต้มดิบ (S1-S5):</b></td><td><b>${res.total} / 25 คะแนน</b></td></tr>
+                        <tr class="table-info"><td colspan="3" class="text-end"><b>ระดับสมรรถภาพรวม (Rank):</b></td><td><span class="badge bg-danger fs-5 px-3">${res.rank}</span></td></tr>
+                    </tbody>
+                </table>
+                </div>`;
+            Swal.fire({ title: titleText, html: html, icon: 'success', width: window.innerWidth > 768 ? '680px' : '95%', confirmButtonColor: '#0066B2' });
+            
+            document.getElementById('form-data-area').classList.add('hidden');
+            toggleStudentFieldsLock(false);
+            clearStudentInputs();
+            clearScoreInputs();
+            document.getElementById('sid').value = "";
+            document.getElementById('status-alert').classList.add('hidden');
+
+            if(!document.getElementById('admin').classList.contains('hidden')) { loadAdminDataByTab(); }
+        }).saveAndCalc(f);
+    }
+
+    function searchHistory() {
+        var sid = document.getElementById('sId').value;
+        if(!sid) return Swal.fire('ระบุรหัสประจำตัว', '', 'warning');
+        Swal.fire({ title: 'กำลังดึงรายงานจากระบบ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+       
+        google.script.run.withSuccessHandler(data => {
+            if (data.length > 0) {
+                Swal.close(); document.getElementById('sRes').classList.remove('hidden');
+                document.getElementById('sInfo').innerHTML = "<i class='bi bi-person-circle'></i> <b>ข้อมูลผู้ทดสอบ: </b>" + data[0].info;
+               
+                var thpColor = (lbl) => {
+                    if (["ต่ำมาก"].includes(lbl)) return "text-status-red";
+                    if (["ต่ำ", "ผอมมาก", "อ้วน"].includes(lbl)) return "text-status-orange";
+                    if (["ปานกลาง", "ผอม", "ท้วม"].includes(lbl)) return "text-status-yellow";
+                    if (["ดี"].includes(lbl)) return "text-status-lightgreen";
+                    if (["ดีมาก", "สมส่วน"].includes(lbl)) return "text-status-green";
+                    return "";
+                };
+
+                var h = '';
+                data.forEach((r, idx) => {
+                    let canvasId = `radarCanvas_${idx}`;
+                    let displayF1 = (r.f1 !== undefined && r.f1 !== null && r.f1 !== "") ? r.f1 : '-';
+                    h += `<div class="mb-4 shadow-sm border p-3 bg-white rounded-4">
+                        <div class="badge bg-dark mb-3">ปีการศึกษา ${r.academic_year} / เทอม ${r.semester}</div>
+                        <div class="row align-items-center">
+                            <div class="col-lg-7">
+                                <div class="table-responsive">
+                                <table class="table table-bordered text-center table-sm align-middle m-0" style="min-width: 380px;">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>รายการทดสอบ</th>
+                                            <th>ผลสถิติดิบ</th>
+                                            <th>ระดับการประเมินเกณฑ์</th>
+                                            <th>แต้มสรุป</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>S1: ดัชนีมวลกาย (BMI)</td><td><b>${r.bmi}</b></td><td class="${thpColor(r.bmiL)}">${r.bmiL}</td><td><b>${r.bmiS}</b></td></tr>
+                                        <tr><td>S2: นั่งงอตัว (ซม.)</td><td>${displayF1}</td><td class="${thpColor(r.f1L)}">${r.f1L}</td><td><b>${r.f1S}</b></td></tr>
+                                        <tr><td>S3: ยืนยกเข่า 3 นาที</td><td>${r.f2}</td><td class="${thpColor(r.f2L)}">${r.f2L}</td><td><b>${r.f2S}</b></td></tr>
+                                        <tr><td>S4: ดันพื้น 30 วินาที</td><td>${r.f3}</td><td class="${thpColor(r.f3L)}">${r.f3L}</td><td><b>${r.f3S}</b></td></tr>
+                                        <tr><td>S5: ลุกนั่ง 60 วินาที</td><td>${r.f4}</td><td class="${thpColor(r.f4L)}">${r.f4L}</td><td><b>${r.f4S}</b></td></tr>
+                                        <tr class="table-info"><td colspan="3"><b>สรุปผลและใบประเมินแรงค์ภาพรวมประจำเทอม</b></td><td>ระดับสมรรถภาพ: <b class="fs-5 text-danger">${r.rank}</b> (แต้มรวม: ${r.total})</td></tr>
+                                    </tbody>
+                                </table>
+                                </div>
+                            </div>
+                            <div class="col-lg-5 text-center mt-3 mt-lg-0">
+                                <h6 class="fw-bold text-navy mb-2"><i class="bi bi-diagram-3-fill me-1"></i> กราฟเรดาร์สมรรถภาพ 5 ด้าน</h6>
+                                <div class="chart-container">
+                                    <canvas id="${canvasId}"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                document.getElementById('sTableArea').innerHTML = h;
+
+                setTimeout(() => {
+                    data.forEach((r, idx) => {
+                        let canvasId = `radarCanvas_${idx}`;
+                        renderIndividualRadarChart(canvasId, [r.bmiS, r.f1S, r.f2S, r.f3S, r.f4S]);
+                    });
+                }, 100);
+
+            } else { document.getElementById('sRes').classList.add('hidden'); Swal.fire({title: 'ไม่พบประวัติย้อนหลัง', text: 'ยังไม่มีการกรอกข้อมูลของรหัสนี้ในชีต Fitness_Logs', icon: 'info', confirmButtonColor: '#002B49'}); }
+        }).searchFitnessHistory(sid, document.getElementById('sSem').value, document.getElementById('sYr').value);
+    }
+
+    function renderIndividualRadarChart(canvasId, scores) {
+        let ctx = document.getElementById(canvasId);
+        if(!ctx) return;
+        if(radarChartsInstances[canvasId]) { radarChartsInstances[canvasId].destroy(); }
+
+        radarChartsInstances[canvasId] = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['BMI (ดัชนีมวลกาย)', 'นั่งงอตัว', 'ยืนยกเข่า', 'ดันพื้น', 'ลุกนั่ง'],
+                datasets: [{
+                    label: 'คะแนนที่ได้ (1-5 แต้ม)',
+                    data: scores.map(s => parseInt(s) || 0),
+                    backgroundColor: 'rgba(0, 163, 224, 0.25)',
+                    borderColor: '#0066B2',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#002B49',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#002B49'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    r: {
+                        angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
+                        grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                        suggestedMin: 0,
+                        suggestedMax: 5,
+                        ticks: { stepSize: 1, font: { family: 'Sarabun' } },
+                        pointLabels: { font: { family: 'Sarabun', size: 11, weight: 'bold' } }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+
+    let allStudentData = [];
+    let pendingStudentData = [];
+    let currentPage = 1;    
+    let currentPendingPage = 1;
+    const rowsPerPage = 40;  
+
+    function switchAdminTab(tab) {
+        if (tab === 'pending') {
+            const sem = document.getElementById('aSem').value;
+            const yr = document.getElementById('aYr').value;
+            const lev = document.getElementById('aLev').value;
+
+            if (sem === 'all' || yr === 'all' || lev === 'all') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'เงื่อนไขการคัดกรองไม่ถูกต้อง',
+                    text: 'กรุณาเลือก ภาคเรียน, ปีการศึกษา และ ระดับชั้น เป็นตัวเลขเฉพาะ (ห้ามเลือก "ทั้งหมด") จากนั้นกด "แสดงข้อมูล" ก่อนใช้งาน Tap นี้',
+                    confirmButtonColor: '#002B49'
+                });
+                return;
+            }
+        }
+
+        currentAdminTab = tab;
+        if (tab === 'tested') {
+            document.getElementById('tabTested').classList.add('active');
+            document.getElementById('tabPending').classList.remove('active');
+            document.getElementById('areaTested').classList.remove('hidden');
+            document.getElementById('areaPending').classList.add('hidden');
+            loadAdmin();
+        } else {
+            document.getElementById('tabPending').classList.add('active');
+            document.getElementById('tabTested').classList.remove('active');
+            document.getElementById('areaPending').classList.remove('hidden');
+            document.getElementById('areaTested').classList.add('hidden');
+            loadPendingAdmin();
+        }
+    }
+
+    function loadAdminDataByTab() {
+        if (currentAdminTab === 'tested') {
+            loadAdmin();
+        } else {
+            const sem = document.getElementById('aSem').value;
+            const yr = document.getElementById('aYr').value;
+            const lev = document.getElementById('aLev').value;
+
+            if (sem === 'all' || yr === 'all' || lev === 'all') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่สามารถแสดงข้อมูลค้างทดสอบได้',
+                    text: 'กรุณาเลือก ภาคเรียน, ปีการศึกษา และ ระดับชั้น เป็นตัวเลขเฉพาะก่อนกดแสดงข้อมูล',
+                    confirmButtonColor: '#002B49'
+                });
+                return;
+            }
+            loadPendingAdmin();
+        }
+    }
+
+    function loadAdmin() {
+        var f = {
+            sem: document.getElementById('aSem').value,
+            yr: document.getElementById('aYr').value,
+            lev: document.getElementById('aLev').value,
+            rom: document.getElementById('aRom').value
+        };
+        var btnClass = document.getElementById('btnClassPDF');
+        var btnText = document.getElementById('btnClassText');  
+        var btnStats = document.getElementById('btnShowStats');
+       
+        if(btnClass && f.lev !== 'all' && f.rom !== 'all') {
+            btnClass.style.display = 'block';
+            if(btnText) btnText.innerHTML = `<i class="bi bi-file-pdf"></i> สร้าง PDF รายห้อง (${f.lev}/${f.rom})`;
+        } else if(btnClass) {
+            btnClass.style.display = 'none';
+        }
+
+        Swal.fire({ title: 'กำลังโหลดบัญชีรายชื่อ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+       
+        google.script.run.withSuccessHandler(data => {
+            Swal.close();
+           
+            if(data && data.length > 0) {
+                document.getElementById('bulkActions').style.display = 'flex';
+                if(btnStats) btnStats.classList.remove('hidden');
+               
+                data.sort((a, b) => {
+                    if (f.lev !== 'all' && f.rom !== 'all') {
+                        return parseInt(a.no || 0) - parseInt(b.no || 0);
+                    } else {
+                        let levA = String(a.lr || '').split('/')[0] || '';
+                        let levB = String(b.lr || '').split('/')[0] || '';
+                        if (levA !== levB) return levA.localeCompare(levB, 'th', { sensitivity: 'base' });
+                       
+                        let romA = parseInt(String(a.lr || '').split('/')[1] || 0);
+                        let romB = parseInt(String(b.lr || '').split('/')[1] || 0);
+                        if (romA !== romB) return romA - romB;
+                       
+                        return parseInt(a.no || 0) - parseInt(b.no || 0);
+                    }
+                });
+
+                allStudentData = data;
+                currentPage = 1;
+                renderAdminTable();
+            } else {
+                allStudentData = [];
+                if(document.getElementById('bulkActions')) document.getElementById('bulkActions').style.display = 'none';
+                if(btnStats) btnStats.classList.add('hidden');
+                document.getElementById('aTable').innerHTML = '<tr><td colspan="15" class="text-center py-4">ไม่พบข้อมูลสถิติตามเงื่อนไขค้นหา</td></tr>';
+                if(document.getElementById('paginationControls')) document.getElementById('paginationControls').innerHTML = '';
+            }
+        }).getAdminData(f);
+    }
+
+    function loadPendingAdmin() {
+        var f = {
+            sem: document.getElementById('aSem').value,
+            yr: document.getElementById('aYr').value,
+            lev: document.getElementById('aLev').value,
+            rom: document.getElementById('aRom').value
+        };
+
+        Swal.fire({ title: 'กำลังตรวจสอบรายชื่อนักเรียนค้างทดสอบ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+       
+        google.script.run.withSuccessHandler(data => {
+            Swal.close();
+            if(data && data.length > 0) {
+                pendingStudentData = data;
+                currentPendingPage = 1;
+                renderPendingTable();
+            } else {
+                pendingStudentData = [];
+                document.getElementById('pTable').innerHTML = '<tr><td colspan="9" class="text-center py-4 text-success"><i class="bi bi-check-circle"></i> ไม่พบรายชื่อค้างทดสอบตามตัวกรองที่เลือก (ทดสอบครบทุกคนแล้ว)</td></tr>';
+                if(document.getElementById('pendingPaginationControls')) document.getElementById('pendingPaginationControls').innerHTML = '';
+            }
+        }).getPendingStudents(f);
+    }
+
+    function renderPendingTable() {
+        var tbody = document.getElementById('pTable');
+        if(!tbody) return;
+       
+        var h = '';
+        const start = (currentPendingPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        const pageData = pendingStudentData.slice(start, end);
+
+        pageData.forEach((r, idx) => {
+            h += `<tr>
+                <td class="text-center">${start + idx + 1}</td>
+                <td class="text-center">${r.id}</td>
+                <td class="text-center">${r.lr}</td>
+                <td class="text-center">${r.no}</td>
+                <td>${r.name}</td>
+                <td class="text-center">${r.sem}</td>
+                <td class="text-center">${r.yr}</td>
+                <td class="text-center"><span class="badge bg-warning text-dark"><i class="bi bi-clock-history"></i> ${r.status}</span></td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-primary" onclick="quickRecordForPending('${r.id}')"><i class="bi bi-pencil-square"></i> บันทึกผล</button>
+                </td>
+            </tr>`;
+        });
+       
+        tbody.innerHTML = h;
+        renderPendingPaginationButtons();
+    }
+
+    function renderPendingPaginationButtons() {
+        var container = document.getElementById('pendingPaginationControls');
+        if (!container) return;
+       
+        container.innerHTML = '';
+        const totalPages = Math.ceil(pendingStudentData.length / rowsPerPage);
+        if (totalPages <= 1) return;
+       
+        let html = `<nav><ul class="pagination justify-content-center flex-wrap mt-3">`;
+        html += `<li class="page-item ${currentPendingPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePendingPage(event, ${currentPendingPage - 1})">ก่อนหน้า</a>
+                 </li>`;
+                 
+        for (let i = 1; i <= totalPages; i++) {
+            html += `<li class="page-item ${currentPendingPage === i ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="changePendingPage(event, ${i})">${i}</a>
+                     </li>`;
+        }
+       
+        html += `<li class="page-item ${currentPendingPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePendingPage(event, ${currentPendingPage + 1})">ถัดไป</a>
+                 </li>`;
+        html += `</ul></nav>`;
+        container.innerHTML = html;
+    }
+
+    function changePendingPage(event, pageNumber) {
+        if (event) event.preventDefault();
+        currentPendingPage = pageNumber;
+        renderPendingTable();
+    }
+
+    function quickRecordForPending(studentId) {
+        document.getElementById('sid').value = studentId;
+        show('record');
+        sync();
+    }
+
+    function copyPendingToLine() {
+        if (!pendingStudentData || pendingStudentData.length === 0) {
+            return Swal.fire('ไม่พบรายการ', 'ไม่มีรายชื่อนักเรียนค้างทดสอบในขณะนี้', 'info');
+        }
+
+        let sem = document.getElementById('aSem').value;
+        let yr = document.getElementById('aYr').value;
+        let lev = document.getElementById('aLev').value;
+        let rom = document.getElementById('aRom').value;
+
+        let roomInfo = rom !== 'all' ? `${lev}/${rom}` : `${lev}`;
+        let text = `📌 **แจ้งเตือนรายชื่อนักเรียนค้างทดสอบสมรรถภาพทางกาย**\n`;
+        text += `🏫 โรงเรียนบดินทรเดชา (สิงห์ สิงหเสนี) ๒\n`;
+        text += `📅 ภาคเรียนที่ ${sem} ปีการศึกษา ${yr} (${roomInfo})\n`;
+        text += `------------------------------------\n`;
+
+        pendingStudentData.forEach((r, idx) => {
+            text += `${idx + 1}. [${r.lr} เลขที่ ${r.no}] ${r.name} (รหัส: ${r.id})\n`;
+        });
+
+        text += `------------------------------------\n`;
+        text += `⚠️ กรุณาติดต่อครูผู้สอนเพื่อดำเนินการทดสอบโดยเร็วครับ`;
+
+        navigator.clipboard.writeText(text).then(() => {
+            Swal.fire({
+                icon: 'success',
+                title: 'คัดลอกรายชื่อเรียบร้อย!',
+                text: 'นำข้อความไปวาง (Paste) ในกลุ่ม LINE ได้เลยทันที',
+                confirmButtonColor: '#0066B2'
+            });
+        }).catch(err => {
+            Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถคัดลอกข้อความได้', 'error');
+        });
+    }
+
+    function renderAdminTable() {
+        var tbody = document.getElementById('aTable');
+        if(!tbody) return;
+       
+        var h = '';
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        const pageData = allStudentData.slice(start, end);
+
+        pageData.forEach((r) => {
+            let displayF1 = (r.f1 !== undefined && r.f1 !== null && r.f1 !== "") ? r.f1 : '-';
+
+            h += `<tr>
+                <td class="text-center"><input type="checkbox" class="row-select form-check-input" data-id="${r.id}" data-sem="${r.sem}" data-yr="${r.yr}"></td>
+                <td class="text-center">${r.id}</td><td class="text-center">${r.lr}</td><td class="text-center">${r.no}</td><td>${r.name}</td>
+                <td class="text-center">${r.bmi || '-'}</td>
+                <td class="text-center">${displayF1}</td>
+                <td class="text-center">${r.f2 || '-'}</td>
+                <td class="text-center">${r.f3 || '-'}</td>
+                <td class="text-center">${r.f4 || '-'}</td>
+                <td class="text-center">${r.sem}</td><td class="text-center">${r.yr}</td>
+                <td class="text-center"><b>${r.total}</b></td><td class="text-center"><span class="badge bg-danger px-2">${r.rank}</span></td>
+                <td class="text-center">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteRow('${r.id}','${r.sem}','${r.yr}')"><i class="bi bi-trash"></i></button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="editRow('${r.id}','${r.sem}','${r.yr}')"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-danger text-white" onclick="printInd('${r.id}','${r.sem}','${r.yr}')"><i class="bi bi-file-earmark-pdf"></i></button>
+                    </div>
+                </td></tr>`;
+        });
+       
+        tbody.innerHTML = h;
+        renderAdminPaginationButtons();
+    }
+
+    function renderAdminPaginationButtons() {
+        var paginationContainer = document.getElementById('paginationControls');
+        if (!paginationContainer) return;
+       
+        paginationContainer.innerHTML = '';
+        const totalPages = Math.ceil(allStudentData.length / rowsPerPage);
+        if (totalPages <= 1) return;
+       
+        let html = `<nav><ul class="pagination justify-content-center flex-wrap mt-3">`;
+        html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changeAdminPage(event, ${currentPage - 1})">ก่อนหน้า</a>
+                 </li>`;
+                 
+        for (let i = 1; i <= totalPages; i++) {
+            html += `<li class="page-item ${currentPage === i ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="changeAdminPage(event, ${i})">${i}</a>
+                     </li>`;
+        }
+       
+        html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changeAdminPage(event, ${currentPage + 1})">ถัดไป</a>
+                 </li>`;
+        html += `</ul></nav>`;
+        paginationContainer.innerHTML = html;
+    }
+
+    function changeAdminPage(event, pageNumber) {
+        if (event) event.preventDefault();
+        currentPage = pageNumber;
+        renderAdminTable();
+        var adminDiv = document.getElementById('admin');
+        if (adminDiv) adminDiv.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function openAdminStatsModal() {
+        if (!allStudentData || allStudentData.length === 0) {
+            return Swal.fire('ไม่พบข้อมูล', 'กรุณากดค้นหาข้อมูลก่อนสรุปกราฟ', 'warning');
+        }
+
+        let levText = document.getElementById('aLev').value;
+        let romText = document.getElementById('aRom').value;
+        let semText = document.getElementById('aSem').value;
+        let yrText = document.getElementById('aYr').value;
+
+        document.getElementById('statsModalSubTitle').innerText = 
+            `ภาคเรียนที่ ${semText} ปีการศึกษา ${yrText} | ระดับชั้น: ${levText} ห้อง: ${romText} (จำนวนนักเรียนรวม ${allStudentData.length} คน)`;
+
+        let total = allStudentData.length;
+
+        let stats = {
+            bmi: { L1: 0, L2: 0, L3: 0, L4: 0, L5: 0 },
+            f1:  { L1: 0, L2: 0, L3: 0, L4: 0, L5: 0 },
+            f2:  { L1: 0, L2: 0, L3: 0, L4: 0, L5: 0 },
+            f3:  { L1: 0, L2: 0, L3: 0, L4: 0, L5: 0 },
+            f4:  { L1: 0, L2: 0, L3: 0, L4: 0, L5: 0 }
+        };
+
+        allStudentData.forEach(r => {
+            if (r.bmiL === "ผอมมาก") stats.bmi.L1++;
+            else if (r.bmiL === "ผอม") stats.bmi.L2++;
+            else if (r.bmiL === "สมส่วน") stats.bmi.L3++;
+            else if (r.bmiL === "ท้วม") stats.bmi.L4++;
+            else if (r.bmiL === "อ้วน") stats.bmi.L5++;
+
+            ['f1', 'f2', 'f3', 'f4'].forEach(key => {
+                let lbl = r[key + 'L'];
+                if (lbl === "ต่ำมาก") stats[key].L1++;
+                else if (lbl === "ต่ำ") stats[key].L2++;
+                else if (lbl === "ปานกลาง") stats[key].L3++;
+                else if (lbl === "ดี") stats[key].L4++;
+                else if (lbl === "ดีมาก") stats[key].L5++;
+            });
+        });
+
+        renderStackedChart(stats, total);
+        renderStatsTable(stats, total);
+
+        let myModal = new bootstrap.Modal(document.getElementById('statsModal'));
+        myModal.show();
+    }
+
+    function renderStackedChart(stats, total) {
+        let ctx = document.getElementById('adminStackedChart').getContext('2d');
+        if (stackedChartInstance) { stackedChartInstance.destroy(); }
+
+        stackedChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['BMI (ดัชนีมวลกาย)', 'นั่งงอตัว', 'ยืนยกเข่า 3 นาที', 'ดันพื้น 30 วินาที', 'ลุกนั่ง 60 วินาที'],
+                datasets: [
+                    { label: 'ต่ำมาก / ผอมมาก', data: [stats.bmi.L1, stats.f1.L1, stats.f2.L1, stats.f3.L1, stats.f4.L1], backgroundColor: '#dc3545' },
+                    { label: 'ต่ำ / ผอม', data: [stats.bmi.L2, stats.f1.L2, stats.f2.L2, stats.f3.L2, stats.f4.L2], backgroundColor: '#ffc107' },
+                    { label: 'ปานกลาง / สมส่วน', data: [stats.bmi.L3, stats.f1.L3, stats.f2.L3, stats.f3.L3, stats.f4.L3], backgroundColor: '#198754' },
+                    { label: 'ดี / ท้วม', data: [stats.bmi.L4, stats.f1.L4, stats.f2.L4, stats.f3.L4, stats.f4.L4], backgroundColor: '#0d6efd' },
+                    { label: 'ดีมาก / อ้วน', data: [stats.bmi.L5, stats.f1.L5, stats.f2.L5, stats.f3.L5, stats.f4.L5], backgroundColor: '#6f42c1' }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { stacked: true },
+                    y: { stacked: true, beginAtZero: true, max: total }
+                },
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    function renderStatsTable(stats, total) {
+        let tbody = document.getElementById('statsTableBody');
+        let html = '';
+        let items = [
+            { key: 'bmi', label: 'BMI (ดัชนีมวลกาย)' },
+            { key: 'f1',  label: 'นั่งงอตัว (ซม.)' },
+            { key: 'f2',  label: 'ยืนยกเข่า 3 นาที' },
+            { key: 'f3',  label: 'ดันพื้น 30 วินาที' },
+            { key: 'f4',  label: 'ลุกนั่ง 60 วินาที' }
+        ];
+
+        items.forEach(item => {
+            let s = stats[item.key];
+            let getPct = (val) => total > 0 ? ((val / total) * 100).toFixed(1) + '%' : '0%';
+            html += `<tr>
+                <td class="text-start fw-bold">${item.label}</td>
+                <td>${s.L1} (${getPct(s.L1)})</td>
+                <td>${s.L2} (${getPct(s.L2)})</td>
+                <td>${s.L3} (${getPct(s.L3)})</td>
+                <td>${s.L4} (${getPct(s.L4)})</td>
+                <td>${s.L5} (${getPct(s.L5)})</td>
+                <td class="fw-bold">${total}</td>
+            </tr>`;
+        });
+
+        tbody.innerHTML = html;
+    }
+
+    function downloadStatsPDF() {
+        let element = document.getElementById('pdfReportContent');
+        let opt = {
+            margin:       0.3,
+            filename:     'รายงานสถิติสมรรถภาพทางกาย.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+
+    function toggleSelectAll(status) {
+        document.querySelectorAll('.row-select').forEach(cb => cb.checked = status);
+    }
+
+    function deleteRow(id, sem, yr) {
+        Swal.fire({
+            title: 'ยืนยันการลบข้อมูล?',
+            text: `รหัสนักเรียน: ${id} (เทอม ${sem}/${yr})`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'ลบข้อมูล'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({ title: 'กำลังลบข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                google.script.run.withSuccessHandler(msg => {
+                    Swal.fire('สำเร็จ', msg, 'success');
+                    loadAdminDataByTab();
+                }).deleteFitnessRecord(id, sem, yr);
+            }
+        });
+    }
+
+    function editRow(id, sem, yr) {
+        document.getElementById('sid').value = id;
+        document.getElementById('sem').value = sem;
+        document.getElementById('yr').value = yr;
+        show('record');
+        sync();
+    }
+
+    function printInd(id, sem, yr) {
+        Swal.fire({ title: 'กำลังสร้าง PDF รายบุคคล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        google.script.run.withSuccessHandler(res => {
+            Swal.close();
+            if (res.success) {
+                window.open(res.url, '_blank');
+            } else {
+                Swal.fire('เกิดข้อผิดพลาด', res.message, 'error');
+            }
+        }).generateIndividualPDF(id, sem, yr);
+    }
+
+    function printReport(type) {
+        let lev = document.getElementById('aLev').value;
+        let rom = document.getElementById('aRom').value;
+        let sem = document.getElementById('aSem').value;
+        let yr = document.getElementById('aYr').value;
+
+        Swal.fire({ title: 'กำลังสร้างเอกสาร PDF...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        if (type === 'CLASS') {
+            google.script.run.withSuccessHandler(res => {
+                Swal.close();
+                if (res.success) window.open(res.url, '_blank');
+                else Swal.fire('เกิดข้อผิดพลาด', res.message, 'error');
+            }).generateClassPDF(lev, rom, sem, yr);
+        } else if (type === 'EXECUTIVE') {
+            google.script.run.withSuccessHandler(res => {
+                Swal.close();
+                if (res.success) window.open(res.url, '_blank');
+                else Swal.fire('เกิดข้อผิดพลาด', res.message, 'error');
+            }).generateAnnualPDF(lev, sem, yr);
+        }
+    }
+
+    function deleteSelected() {
+        let selected = [];
+        document.querySelectorAll('.row-select:checked').forEach(cb => {
+            selected.push({ id: cb.dataset.id, sem: cb.dataset.sem, yr: cb.dataset.yr });
+        });
+
+        if (selected.length === 0) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกรายการที่ต้องการลบ', 'warning');
+
+        Swal.fire({
+            title: `ยืนยันการลบ ${selected.length} รายการ?`,
+            icon: 'danger',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'ลบทั้งหมด'
+        }).then(r => {
+            if (r.isConfirmed) {
+                Swal.fire({ title: 'กำลังลบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                let promises = selected.map(item => {
+                    return new Promise((resolve) => {
+                        google.script.run.withSuccessHandler(resolve).deleteFitnessRecord(item.id, item.sem, item.yr);
+                    });
+                });
+                Promise.all(promises).then(() => {
+                    Swal.fire('สำเร็จ', 'ลบรายการที่เลือกเรียบร้อยแล้ว', 'success');
+                    loadAdminDataByTab();
+                });
+            }
+        });
+    }
+
+    function printSelectedReport() {
+        let selected = [];
+        document.querySelectorAll('.row-select:checked').forEach(cb => {
+            selected.push({ id: cb.dataset.id, sem: cb.dataset.sem, yr: cb.dataset.yr });
+        });
+
+        if (selected.length === 0) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกรายการที่ต้องการพิมพ์', 'warning');
+
+        Swal.fire({ title: `กำลังประมวลผล PDF (${selected.length} รายการ)...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        selected.forEach((item, i) => {
+            setTimeout(() => {
+                google.script.run.withSuccessHandler(res => {
+                    if (res.success) window.open(res.url, '_blank');
+                }).generateIndividualPDF(item.id, item.sem, item.yr);
+            }, i * 1500);
+        });
+    }
+</script>
+</body>
+</html>
